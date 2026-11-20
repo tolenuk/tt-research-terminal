@@ -26,3 +26,7 @@ No GitHub account is needed to download.
 
 The AI analyst needs [Claude Code](https://claude.ai/code) installed and logged in with your
 own Claude account; everything else works without it.
+
+## Licence
+
+[MIT](LICENSE). The market data comes from Yahoo Finance and is subject to its terms.
