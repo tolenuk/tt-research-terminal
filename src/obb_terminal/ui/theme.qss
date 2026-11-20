@@ -1,0 +1,83 @@
+QMainWindow, QDialog { background-color: $bg; }
+QWidget { background-color: transparent; color: $text; }
+QToolTip { background-color: $raised; color: $text; border: 1px solid $rule; padding: 4px; }
+
+QFrame#Panel { background-color: $panel; border: 1px solid $border; border-radius: 4px; }
+QFrame#Section { background-color: transparent; border: 1px solid $rule; border-radius: 4px; }
+QFrame#PanelHeader { border: 0; border-bottom: 1px solid $rule; border-radius: 0; }
+QLabel#PanelTitle { color: $amber_dim; font-size: 8pt; font-weight: 600; border-bottom: 2px solid $amber; padding: 0 0 5px 0; }
+QLabel#SectionHeading { color: $amber_dim; font-size: 8pt; font-weight: 600; border-bottom: 1px solid $rule; padding: 0 0 5px 0; }
+QLabel#DeskTitle { color: $text; font-size: 14pt; font-weight: 600; }
+QLabel#Muted { color: $label; }
+QLabel#Body { color: $text; }
+QLabel#Symbol { color: $text; font-family: $mono; font-weight: 600; }
+QLabel#Secondary { color: $muted; }
+QLabel#Value { color: $amber; font-family: $mono; }
+QLabel#Price { color: $amber; font-family: $mono; font-size: 18pt; font-weight: bold; }
+QLabel#SecuritySymbol { color: $text; font-family: $mono; font-size: 13pt; font-weight: bold; }
+QLabel#SecurityName { color: $label; font-size: 11pt; }
+QLabel#InlineError, QLabel#PanelError { color: $error; }
+QLabel#Offline { color: $down; font-weight: bold; }
+QLabel[dir="up"], QLabel#Value[dir="up"] { color: $up; }
+QLabel[dir="down"], QLabel#Value[dir="down"] { color: $down; }
+
+QLineEdit#TickerEdit { background-color: $panel; color: $text; border: 1px solid $scroll; border-radius: 4px; padding: 6px 10px; font-size: 11pt; }
+QLineEdit, QDoubleSpinBox, QSpinBox { background-color: $bg; color: $amber; border: 1px solid $rule; border-radius: 3px; padding: 2px 6px; selection-background-color: $sel_bg; selection-color: $focus; }
+QLineEdit#SymbolEntry { color: $text; }
+QLineEdit:focus, QDoubleSpinBox:focus, QSpinBox:focus, QLineEdit#TickerEdit:focus { border: 1px solid $focus; }
+
+QPushButton { background-color: $raised; color: $text; border: 1px solid $rule; border-radius: 3px; padding: 3px 10px; }
+QPushButton:hover { border-color: $amber_dim; }
+QPushButton:checked { background-color: $sel_bg; color: $focus; border-color: $amber; }
+QPushButton:disabled { color: $muted; border-color: $border; }
+QPushButton:focus, QListWidget:focus, QTableWidget:focus, QTableView:focus { border: 1px solid $focus; }
+
+QAbstractItemView { background-color: $panel; color: $text; border: 0; gridline-color: $rule; alternate-background-color: $zebra; selection-background-color: $sel_bg; selection-color: $focus; outline: 0; }
+QAbstractItemView::item { padding: 3px 4px; }
+QHeaderView { background-color: transparent; }
+QHeaderView::section { background-color: transparent; color: $muted; border: 0; border-bottom: 1px solid $rule; padding: 4px 6px; font-weight: 600; }
+QTableCornerButton::section { background-color: transparent; border: 0; }
+
+QListWidget#WatchStrip { background-color: transparent; border: 0; font-family: $mono; }
+QListWidget#WatchStrip::item { background-color: $panel; border: 1px solid $border; border-radius: 4px; padding: 4px 10px; margin: 0 6px 6px 0; }
+QListWidget#WatchStrip::item:hover { border-color: $amber_dim; }
+QListWidget#WatchStrip::item:selected { background-color: $sel_bg; border-color: $amber; }
+QListWidget#WatchStrip QScrollBar:horizontal { height: 5px; }
+
+QTabBar { qproperty-drawBase: 0; }
+QTabBar::tab { background-color: transparent; color: $muted; border: 0; border-radius: 3px; padding: 3px 10px; }
+QTabBar::tab:hover { color: $text; }
+QTabBar::tab:selected { background-color: $sel_bg; color: $focus; }
+QTabWidget#PageTabs::pane { border: 0; border-top: 1px solid $rule; }
+QScrollArea#PageNavStrip QScrollBar:horizontal { height: 5px; }
+QLabel#NavGroup { color: $amber_dim; font-size: 7pt; font-weight: 600; padding: 0 4px 0 0; }
+QFrame#NavSep { background-color: $rule; border: 0; }
+QPushButton#NavTab { background-color: transparent; color: $muted; border: 0; border-radius: 0; border-bottom: 2px solid transparent; padding: 7px 10px; font-weight: 600; }
+QPushButton#NavTab:hover { color: $text; }
+QPushButton#NavTab:checked { background-color: transparent; color: $amber; border-bottom: 2px solid $amber; }
+QPushButton#NavTab:focus { border: 0; border-bottom: 2px solid $focus; }
+QTabWidget#PageTabs > QTabBar::tab { background-color: transparent; color: $muted; border-radius: 0; border-bottom: 2px solid transparent; padding: 7px 18px; font-weight: 600; }
+QTabWidget#PageTabs > QTabBar::tab:hover { color: $text; }
+QTabWidget#PageTabs > QTabBar::tab:selected { color: $amber; border-bottom: 2px solid $amber; }
+
+QStatusBar { background-color: $bg; color: $muted; border-top: 1px solid $rule; }
+QStatusBar QLabel { color: $muted; }
+
+QLabel#BigScore { color: $amber; font-family: $mono; font-size: 26pt; font-weight: bold; }
+QLabel#Blended { color: $amber; font-family: $mono; font-size: 14pt; font-weight: bold; }
+QLabel#Disclaimer { color: $muted; font-size: 8pt; }
+QProgressBar#ScoreBar { background-color: $raised; border: 0; border-radius: 3px; max-height: 8px; }
+QProgressBar#ScoreBar::chunk { background-color: $amber; border-radius: 3px; }
+QPlainTextEdit { background-color: $bg; color: $text; border: 1px solid $rule; border-radius: 3px; }
+QTableView#HeatMatrix { selection-background-color: $sel_bg; selection-color: $focus; }
+QTableView#HeatMatrix QHeaderView::section { padding: 4px 8px; font-size: 9pt; }
+QTableView#HeatMatrix QHeaderView::up-arrow, QTableView#HeatMatrix QHeaderView::down-arrow { image: none; width: 0; height: 0; }
+
+QScrollBar:vertical { background: transparent; width: 10px; margin: 0; }
+QScrollBar:horizontal { background: transparent; height: 10px; margin: 0; }
+QScrollBar::handle { background: $scroll; border-radius: 4px; min-height: 24px; min-width: 24px; }
+QScrollBar::handle:hover { background: $amber_dim; }
+QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }
+QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
+QPushButton#PanelSwitch { background-color: transparent; color: $muted; border: 1px solid $rule; border-radius: 3px; padding: 1px 8px; }
+QPushButton#PanelSwitch:hover { color: $text; border-color: $amber_dim; }

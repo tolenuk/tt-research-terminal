@@ -1,0 +1,118 @@
+# Tests TT Research Terminal on a real Mac and packs the testers' zip (packaging/macos).
+# Run it by hand from the Actions tab for a test build (the zip is a downloadable artifact), or
+# push a tag matching pyproject's version (git tag v0.2.7 && git push origin v0.2.7) to also add
+# the zip to that GitHub release (the Windows workflow adds its exe to the same one).
+name: macOS
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  UV_VERSION: "0.13.6"
+
+jobs:
+  test:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+      - name: Run the test suite on macOS (with a real launchd round trip)
+        env:
+          OBB_REAL_LAUNCHD: "1"
+        run: |
+          uv sync --frozen
+          uv run pytest -q
+
+  package:
+    needs: test
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+
+      - name: Stage install.sh, the wheel and the pinned requirements into a zip
+        id: stage
+        run: |
+          version="$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml | head -n 1)"
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match pyproject version $version"; exit 1
+          fi
+          name="TT-Research-Terminal-macOS-$version"
+          mkdir -p "stage/$name" dist
+          cp packaging/macos/install.sh packaging/macos/TESTERS.txt "stage/$name/"
+          uv export --frozen --no-dev --no-emit-project -o "stage/$name/requirements.txt"
+          uv build --wheel --out-dir "stage/$name"
+          ditto -c -k --keepParent "stage/$name" "dist/$name.zip"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          ls -la "stage/$name" dist
+
+      - name: Test install from the zip, start the app, check alerts, uninstall
+        run: |
+          set -euo pipefail
+          name="${{ steps.stage.outputs.name }}"
+          work="$RUNNER_TEMP/tester"
+          mkdir -p "$work"
+          ditto -x -k "dist/$name.zip" "$work"
+          bash "$work/$name/install.sh"
+          app="$HOME/Applications/TT Research Terminal.app"
+          py="$app/Contents/Resources/venv/bin/python"
+          test -x "$app/Contents/MacOS/tt-research-terminal"
+          test -f "$app/Contents/Resources/tt-research.icns"
+          plutil -lint "$app/Contents/Info.plist"
+
+          # The app must still be running after 40 s (it exits at once if startup crashes).
+          QT_QPA_PLATFORM=offscreen "$app/Contents/MacOS/tt-research-terminal" 2> app-stderr.txt &
+          pid=$!
+          sleep 40
+          alive=0; kill -0 "$pid" 2>/dev/null && alive=1
+          [ "$alive" = 1 ] && kill "$pid"
+          cat app-stderr.txt || true
+          cat "$HOME/Library/Application Support/obb-terminal/obb-terminal.log" || true
+          [ "$alive" = 1 ] || { echo "TT Research Terminal exited during startup"; exit 1; }
+          sleep 2
+
+          "$py" -m obb_terminal.alerts.checker --install
+          "$py" -m obb_terminal.alerts.checker --status | tee status.txt
+          grep -q "Background alerts: on" status.txt
+          plutil -lint "$HOME/Library/LaunchAgents/com.ttresearch.obb-terminal-alerts.plist"
+
+          # Updating over an installed app with the agent on keeps both.
+          bash "$work/$name/install.sh"
+          "$py" -m obb_terminal.alerts.checker --status | grep -q "Background alerts: on"
+
+          bash "$work/$name/install.sh" --uninstall
+          test ! -e "$app"
+          test ! -e "$HOME/Library/LaunchAgents/com.ttresearch.obb-terminal-alerts.plist"
+          echo "Install, start, alerts, update and uninstall all OK"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ steps.stage.outputs.name }}
+          path: dist/*.zip
+          if-no-files-found: warn
+
+      - name: Add the zip to the release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          zip="dist/${{ steps.stage.outputs.name }}.zip"
+          # Whichever platform's workflow finishes first creates the release.
+          gh release upload "$GITHUB_REF_NAME" "$zip" --clobber 2>/dev/null ||
+            gh release create "$GITHUB_REF_NAME" "$zip" \
+              --title "TT Research Terminal ${{ steps.stage.outputs.version }} (test build)" \
+              --notes-file packaging/RELEASE-NOTES.md ||
+            gh release upload "$GITHUB_REF_NAME" "$zip" --clobber

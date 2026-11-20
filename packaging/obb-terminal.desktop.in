@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=TT Research Terminal
+Comment=Bloomberg-style research terminal powered by OpenBB
+Exec=@BIN@
+Icon=tt-research-terminal
+Terminal=false
+Categories=Office;Finance;
+StartupWMClass=obb-terminal

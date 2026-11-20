@@ -1,0 +1,43 @@
+TT Research Terminal - test version
+===========================
+
+Thanks for testing! TT Research Terminal is a desktop research terminal for stocks and funds:
+quotes, charts, fundamentals, valuation, a watchlist with price alerts, and an optional
+AI analyst.
+
+What this installer does
+------------------------
+- Installs TT Research Terminal for your Windows user only. No administrator rights needed.
+- Downloads its own copy of Python 3.12 and the exact library versions the app was tested
+  with (about 300 MB, a few minutes). Any Python you already have is left alone.
+- Adds "TT Research Terminal" to the Start Menu.
+- Optionally installs Claude Code, which the AI analyst uses (plus Git for Windows if it
+  is missing, which Claude Code needs).
+
+You need
+--------
+- Windows 10 or 11 (64-bit) and an internet connection.
+- For the AI analyst only: your own Claude account that includes Claude Code (for
+  example Pro or Max). After installing, open
+  PowerShell, type  claude  and press Enter once to log in. Everything else works without it.
+
+"Windows protected your PC"
+---------------------------
+This test build is not code-signed, so Windows may warn you before it runs. Click
+"More info", then "Run anyway".
+
+Updating and removing
+---------------------
+- To update, run the newer installer. Your watchlist, journal and reports are kept.
+- To remove: Settings > Apps > Installed apps > TT Research Terminal > Uninstall. Your data stays in
+  %LOCALAPPDATA%\obb-terminal; delete that folder too if you want it gone.
+
+If something goes wrong
+-----------------------
+Please send the person who gave you this installer:
+- a screenshot of the problem
+- %LOCALAPPDATA%\obb-terminal\obb-terminal.log (the app's log)
+- if the install itself failed: %LOCALAPPDATA%\Programs\obb-terminal\setup.log
+(Paste those paths into the File Explorer address bar to find them.)
+
+This is a research tool, not investment advice.

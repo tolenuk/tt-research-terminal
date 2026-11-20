@@ -1,0 +1,78 @@
+TT Research Terminal for Mac - test version
+==========================================
+
+Thanks for testing! TT Research Terminal is a desktop research terminal for stocks and funds:
+quotes, charts, fundamentals, valuation, a watchlist with price alerts, and an optional
+AI analyst. This is the first Mac build, so the checklist at the end matters a lot.
+
+You need
+--------
+- macOS 14 (Sonoma) or newer, Apple silicon or Intel, and an internet connection.
+- About 1 GB of free space (the app downloads Python 3.12 and its libraries, ~300 MB).
+- For the AI analyst only: your own Claude account that includes Claude Code (for example
+  Pro or Max). Everything else works without it.
+
+Install
+-------
+1. Double-click the downloaded TT-Research-Terminal-macOS-<version>.zip to unpack it
+   (Safari may have unpacked it already). You get a folder of the same name in Downloads.
+2. Open Terminal (Spotlight: Cmd+Space, type Terminal, Enter) and paste this line, with the
+   version you downloaded in place of <version>:
+
+       bash ~/Downloads/TT-Research-Terminal-macOS-<version>/install.sh
+
+   If macOS asks whether Terminal may access your Downloads folder, click Allow.
+   It takes a few minutes the first time. Nothing needs your password.
+3. Open "TT Research Terminal" from Launchpad, Spotlight, or the Applications folder in
+   your home folder (Finder > Go > Home > Applications).
+
+Because the app is built on your Mac by the script, macOS does not show the
+"unidentified developer" warning.
+
+AI analyst (optional)
+---------------------
+In Terminal:
+
+    curl -fsSL https://claude.ai/install.sh | bash
+    claude
+
+The second line logs you in once; type /exit when it is done.
+
+Updating and removing
+---------------------
+- To update, unpack the newer zip and run its install.sh the same way. Quit the app first.
+  Your watchlist, journal and reports are kept.
+- To remove, run the same command with --uninstall at the end. Your data stays in
+  ~/Library/Application Support/obb-terminal; delete that folder too if you want it gone.
+
+Please check and report back
+----------------------------
+[ ] 1. The install finished with "Done." (if not, send the whole Terminal output)
+[ ] 2. The app opens from Launchpad/Spotlight and the Dock shows the TT icon
+       (not a generic Python rocket).
+[ ] 3. The menu bar next to the Apple menu says "TT Research Terminal" (or does it say
+       "Python"?).
+[ ] 4. Type AAPL in the ticker box: price, chart and fundamentals appear.
+[ ] 5. Cmd+1 ... Cmd+4 switch the Overview panels; Option+1 ... Option+0 switch pages.
+[ ] 6. Valuation > the AI analyst button gives a report (needs Claude Code, above).
+[ ] 7. Watchlist > switch on Background alerts. macOS may show "Background Items Added":
+       that is expected. The switch should then say it is on.
+[ ] 8. Set a Price target above today's price for one symbol, then in Terminal run
+
+           "$HOME/Applications/TT Research Terminal.app/Contents/Resources/venv/bin/python" -m obb_terminal.alerts.checker
+
+       A notification should appear (from "Script Editor"). If none appears, open
+       System Settings > Notifications > Script Editor and allow notifications, then retry.
+[ ] 9. Export a PDF report from Valuation: it lands in Documents/TT Research Reports.
+[ ] 10. Text is readable and nothing looks clipped (send a screenshot of anything odd:
+        Cmd+Shift+4, then Space, then click the window).
+
+If something goes wrong
+-----------------------
+Please send the person who gave you this app:
+- a screenshot of the problem
+- ~/Library/Application Support/obb-terminal/obb-terminal.log (the app's log)
+- for background alerts also obb-terminal-alerts.stdio.log from the same folder
+(In Finder: Go > Go to Folder..., paste the folder path, Enter.)
+
+This is a research tool, not investment advice.

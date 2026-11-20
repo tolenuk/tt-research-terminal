@@ -1,0 +1,124 @@
+# Builds the testers' Windows installer (packaging/windows/installer) on a real Windows machine.
+# Run it by hand from the Actions tab for a test build (the exe is a downloadable artifact), or
+# push a tag matching pyproject's version (git tag v0.1.0 && git push origin v0.1.0) to also
+# publish it on a GitHub release.
+name: Windows installer
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  UV_VERSION: "0.13.6"
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+      - name: Run the test suite on Windows
+        run: |
+          uv sync --frozen
+          uv run pytest -q
+
+  installer:
+    needs: test
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+
+      - name: Stage uv, pinned requirements and the wheel
+        id: stage
+        run: |
+          $version = (Select-String -Path pyproject.toml -Pattern '^version = "(.+)"').Matches[0].Groups[1].Value
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") {
+            throw "Tag $env:GITHUB_REF_NAME does not match pyproject version $version"
+          }
+          New-Item -ItemType Directory -Force stage | Out-Null
+          Copy-Item (Get-Command uv).Source stage\uv.exe
+          uv export --frozen --no-dev --no-emit-project -o stage\requirements.txt
+          uv build --wheel --out-dir stage
+          $wheel = (Get-ChildItem stage\*.whl).Name
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "wheel=$wheel" >> $env:GITHUB_OUTPUT
+          Get-ChildItem stage
+
+      - name: Build the installer
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup --no-progress -y
+            if ($LASTEXITCODE -ne 0) { throw "Inno Setup install failed" }
+          }
+          & $iscc /Q "/DAppVersion=${{ steps.stage.outputs.version }}" `
+            "/DWheelName=${{ steps.stage.outputs.wheel }}" "/DStageDir=$PWD\stage" `
+            "/O$PWD\dist" packaging\windows\installer\obb-terminal.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
+          Get-ChildItem dist
+
+      - name: Test install, start the app, uninstall
+        run: |
+          $exe = (Get-ChildItem dist\TT-Research-Terminal-Setup-*.exe).FullName
+          $app = "$env:LOCALAPPDATA\Programs\obb-terminal"
+          $p = Start-Process $exe -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/TASKS=""', "/LOG=$PWD\install.log" -Wait -PassThru
+          Get-Content "$app\setup.log" -ErrorAction SilentlyContinue
+          if ($p.ExitCode -ne 0) { throw "Installer exit code $($p.ExitCode)" }
+          if (-not (Test-Path "$app\venv\Scripts\pythonw.exe")) { throw "No venv after install" }
+          if (-not (Test-Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\TT Research Terminal.lnk")) {
+            throw "No Start Menu shortcut"
+          }
+
+          # The app must still be running after 40 s (it exits at once if startup crashes).
+          $env:QT_QPA_PLATFORM = 'offscreen'
+          $run = Start-Process "$app\venv\Scripts\python.exe" -ArgumentList '-m', 'obb_terminal' -PassThru `
+            -RedirectStandardError app-stderr.txt
+          Start-Sleep -Seconds 40
+          $alive = -not $run.HasExited
+          if ($alive) { Stop-Process -Id $run.Id -Force }
+          Get-Content app-stderr.txt -ErrorAction SilentlyContinue
+          Get-Content "$env:LOCALAPPDATA\obb-terminal\obb-terminal.log" -ErrorAction SilentlyContinue
+          if (-not $alive) { throw "TT Research Terminal exited during startup (code $($run.ExitCode))" }
+          Start-Sleep -Seconds 2
+
+          $u = Start-Process "$app\unins000.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART' -Wait -PassThru
+          # The uninstaller finishes from a temporary copy, so wait for the folder to go.
+          for ($i = 0; $i -lt 60 -and (Test-Path "$app\venv"); $i++) { Start-Sleep -Seconds 2 }
+          if (Test-Path "$app\venv") { throw "venv left behind after uninstall" }
+          Write-Host "Install, start and uninstall all OK"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: TT-Research-Terminal-Setup-${{ steps.stage.outputs.version }}
+          path: |
+            dist/*.exe
+            install.log
+          if-no-files-found: warn
+
+      - name: Publish the release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Whichever platform's workflow finishes first creates the release (see macos.yml).
+          $exe = (Get-ChildItem dist\*.exe).FullName
+          gh release upload $env:GITHUB_REF_NAME $exe --clobber 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:GITHUB_REF_NAME $exe `
+              --title "TT Research Terminal ${{ steps.stage.outputs.version }} (test build)" `
+              --notes-file packaging\RELEASE-NOTES.md
+            if ($LASTEXITCODE -ne 0) { gh release upload $env:GITHUB_REF_NAME $exe --clobber }
+          }
+          if ($LASTEXITCODE -ne 0) { throw "Could not publish the release" }
